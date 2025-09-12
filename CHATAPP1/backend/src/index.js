@@ -11,16 +11,21 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./lib/socket.js";
 
-dotenv.config();
+const __dirname = path.resolve();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const PORT = process.env.PORT;
-const __dirname = path.resolve();
+console.log("Environment variables loaded:");
+console.log("PORT:", PORT);
+console.log("MONGODB_URI:", process.env.MONGODB_URI ? "✓ Loaded" : "✗ Missing");
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.NODE_ENV === "production"
+      ? ["https://your-frontend-domain.vercel.app", "https://chatapp-frontend.vercel.app"]
+      : "http://localhost:5173",
     credentials: true,
   })
 );

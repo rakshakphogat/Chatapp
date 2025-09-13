@@ -56,6 +56,7 @@ const corsOptions = {
         const allowedOrigins = process.env.NODE_ENV === "production"
             ? [
                 process.env.FRONTEND_URL,
+                "https://chatapp-rc3y.vercel.app",
                 "https://chatapp-frontend.vercel.app",
                 // Allow any Vercel app subdomain
                 ...origin.match(/^https:\/\/.*\.vercel\.app$/) ? [origin] : []

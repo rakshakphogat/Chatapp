@@ -7,8 +7,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 18.18.0
       - key: PORT
-        fromService:
+        fromService: 
           type: web
           name: chatapp-backend
           property: port

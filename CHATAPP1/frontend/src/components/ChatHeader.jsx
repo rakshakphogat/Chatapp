@@ -2,9 +2,12 @@ import { X } from "lucide-react";
 import { useAuthStore, useChatStore } from "../stores";
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser } = useChatStore();
-  const { onlineUsers } = useChatStore();
+  const { selectedUser, setSelectedUser, isSelectedUserOnline } =
+    useChatStore();
   const { authUser } = useAuthStore();
+
+  // Check if selected user is online using the store method
+  const userIsOnline = isSelectedUserOnline();
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -24,7 +27,7 @@ const ChatHeader = () => {
           <div>
             <h3 className="font-medium">{selectedUser.fullName}</h3>
             <p className="text-sm text-base-content/70">
-              {selectedUser.isOnline ? "Online" : "Offline"}
+              {userIsOnline ? "Online" : "Offline"}
             </p>
           </div>
         </div>
@@ -37,4 +40,5 @@ const ChatHeader = () => {
     </div>
   );
 };
+
 export default ChatHeader;

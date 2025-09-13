@@ -12,7 +12,10 @@ export const getUsersForSidebar = async (req, res) => {
             _id: { $ne: loggedInUserId }
         }).select("-password");
 
-        res.status(200).json(filteredUsers);
+        res.status(200).json({
+            success: true,
+            users: filteredUsers
+        });
     } catch (error) {
         console.error("Error in getUsersForSidebar:", error);
         res.status(500).json({
@@ -88,15 +91,20 @@ export const sendMessage = async (req, res) => {
         await newMessage.save();
 
         // Emit to receiver via socket.io for real-time messaging
-        const receiverSocketId = getReceiverSocketId(receiverId);
-        if (receiverSocketId) {
-            io.to(receiverSocketId).emit("newMessage", newMessage);
+        const receiverSocketIds = getReceiverSocketId(receiverId);
+        if (receiverSocketIds && receiverSocketIds.length > 0) {
+            // Send to all of the receiver's active sessions
+            receiverSocketIds.forEach(socketId => {
+                io.to(socketId).emit("newMessage", newMessage);
+            });
+            console.log("📤 Message sent to", receiverSocketIds.length, "receiver sessions");
+        } else {
+            console.log("📴 Receiver is offline");
         }
 
         res.status(201).json({
             success: true,
-            message: "Message sent successfully",
-            data: newMessage
+            message: newMessage
         });
     } catch (error) {
         console.error("Error in sendMessage controller:", error);

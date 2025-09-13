@@ -6,9 +6,12 @@ import cloudinary from "../lib/cloudinary.js";
 export const signup = async (req, res) => {
     const { fullName, email, password } = req.body;
 
+    console.log('Signup request received:', { fullName, email, passwordLength: password?.length });
+
     try {
         // Validation
         if (!fullName || !email || !password) {
+            console.log('Validation failed: Missing fields');
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
@@ -16,6 +19,7 @@ export const signup = async (req, res) => {
         }
 
         if (password.length < 6) {
+            console.log('Validation failed: Password too short');
             return res.status(400).json({
                 success: false,
                 message: "Password must be at least 6 characters"
@@ -25,6 +29,7 @@ export const signup = async (req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
+            console.log('Validation failed: User already exists');
             return res.status(400).json({
                 success: false,
                 message: "Email already exists"
@@ -43,6 +48,7 @@ export const signup = async (req, res) => {
         });
 
         await newUser.save();
+        console.log('User created successfully:', newUser._id);
 
         // Generate JWT token
         generateToken(newUser._id, res);

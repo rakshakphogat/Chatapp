@@ -4,9 +4,16 @@ import { Users } from "lucide-react";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
-    useChatStore();
-  const { onlineUsers } = useChatStore();
+  const { 
+    getUsers, 
+    getUsersWithOnlineStatus, 
+    getOnlineUsersCount,
+    getUnreadCount,
+    unreadMessages,
+    selectedUser, 
+    setSelectedUser, 
+    isUsersLoading 
+  } = useChatStore();
   const { authUser } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
@@ -14,9 +21,23 @@ const Sidebar = () => {
     getUsers();
   }, [getUsers]);
 
+  // Debug: Log unread messages whenever they change
+  useEffect(() => {
+    console.log('📱 Sidebar: Unread messages state changed:', unreadMessages);
+  }, [unreadMessages]);
+
+  // Get users with real-time online status
+  const usersWithOnlineStatus = getUsersWithOnlineStatus();
+  const onlineCount = getOnlineUsersCount();
+
+  // Exclude current user from online count
+  const actualOnlineCount = usersWithOnlineStatus.filter(
+    (user) => user.isOnline && user._id !== authUser?._id
+  ).length;
+
   const filteredUsers = showOnlineOnly
-    ? users.filter((user) => user.isOnline)
-    : users;
+    ? usersWithOnlineStatus.filter((user) => user.isOnline)
+    : usersWithOnlineStatus;
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -39,7 +60,7 @@ const Sidebar = () => {
             <span className="text-sm">Show online only</span>
           </label>
           <span className="text-xs text-zinc-500">
-            ({onlineUsers?.length - 1} online)
+            ({actualOnlineCount} online)
           </span>
         </div>
       </div>
@@ -62,8 +83,11 @@ const Sidebar = () => {
             <div className="relative mx-auto lg:mx-0">
               <img
                 src={user.profilePic || "/avatar.svg"}
-                alt={user.name}
+                alt={user.fullName || user.name}
                 className="size-12 object-cover rounded-full"
+                onError={(e) => {
+                  e.target.src = "/avatar.svg";
+                }}
               />
               {user.isOnline && (
                 <span
@@ -71,23 +95,41 @@ const Sidebar = () => {
                   rounded-full ring-2 ring-zinc-900"
                 />
               )}
+              {/* Unread indicator for mobile */}
+              {getUnreadCount(user._id) > 0 && (
+                <span className="lg:hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] z-10">
+                  {getUnreadCount(user._id) > 9 ? "9+" : getUnreadCount(user._id)}
+                </span>
+              )}
             </div>
 
             {/* User info - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0">
+            <div className="hidden lg:block text-left min-w-0 flex-1">
               <div className="font-medium truncate">{user.fullName}</div>
               <div className="text-sm text-zinc-400">
                 {user.isOnline ? "Online" : "Offline"}
               </div>
             </div>
+
+            {/* Unread message count badge */}
+            {getUnreadCount(user._id) > 0 && (
+              <div className="hidden lg:block">
+                <span className="bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+                  {getUnreadCount(user._id) > 99 ? "99+" : getUnreadCount(user._id)}
+                </span>
+              </div>
+            )}
           </button>
         ))}
 
         {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
+          <div className="text-center text-zinc-500 py-4">
+            {showOnlineOnly ? "No online users" : "No users found"}
+          </div>
         )}
       </div>
     </aside>
   );
 };
+
 export default Sidebar;

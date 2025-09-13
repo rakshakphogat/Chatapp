@@ -18,7 +18,7 @@ const useAuthStore = create((set, get) => ({
 
       if (response.data.success) {
         set({ authUser: response.data.user });
-        get().connectSocket();
+        await get().connectSocket();
       } else {
         set({ authUser: null });
       }
@@ -39,7 +39,7 @@ const useAuthStore = create((set, get) => ({
       if (response.data.success) {
         set({ authUser: response.data.user });
         toast.success('Account created successfully');
-        get().connectSocket();
+        await get().connectSocket();
       } else {
         toast.error(response.data.message || 'Signup failed');
       }
@@ -60,7 +60,7 @@ const useAuthStore = create((set, get) => ({
       if (response.data.success) {
         set({ authUser: response.data.user });
         toast.success('Logged in successfully');
-        get().connectSocket();
+        await get().connectSocket();
       } else {
         toast.error(response.data.message || 'Login failed');
       }
@@ -106,10 +106,17 @@ const useAuthStore = create((set, get) => ({
   },
 
   // Socket Connection
-  connectSocket: () => {
+  connectSocket: async () => {
     const { authUser } = get();
-    if (authUser && !socketService.socket?.connected) {
-      socketService.connect(authUser._id);
+    if (authUser) {
+      try {
+        console.log('🔌 Initiating socket connection for user:', authUser._id);
+        await socketService.connect(authUser._id);
+        console.log('✅ Socket connection established');
+      } catch (error) {
+        console.error('❌ Failed to connect socket:', error);
+        toast.error('Failed to establish real-time connection');
+      }
     }
   },
 

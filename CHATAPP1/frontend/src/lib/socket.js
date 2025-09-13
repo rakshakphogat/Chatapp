@@ -36,8 +36,8 @@ class SocketService {
             try {
                 console.log('🔌 Connecting socket for user:', userId);
 
-                const serverUrl = import.meta.env.VITE_SOCKET_URL || 
-                    import.meta.env.VITE_API_URL?.replace('/api', '') || 
+                const serverUrl = import.meta.env.VITE_SOCKET_URL ||
+                    import.meta.env.VITE_API_URL?.replace('/api', '') ||
                     'http://localhost:5001';
                 console.log('🌐 Connecting to server:', serverUrl);
 

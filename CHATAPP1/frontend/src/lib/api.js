@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-    withCredentials: true,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  withCredentials: true,
 });
 
 // Request interceptor for debugging
@@ -30,4 +30,4 @@ api.interceptors.response.use(
     console.error('Error config:', error.config);
     return Promise.reject(error);
   }
-);export default api;
+); export default api;

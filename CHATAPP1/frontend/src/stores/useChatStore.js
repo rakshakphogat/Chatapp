@@ -136,7 +136,7 @@ const useChatStore = create((set, get) => ({
         set({ messages: [...messages, message] });
       } else {
         console.log('ℹ️ Message not for current conversation');
-        
+
         // Increment unread count for the sender if not current conversation
         const { unreadMessages } = get();
         const updatedUnreadMessages = { ...unreadMessages };

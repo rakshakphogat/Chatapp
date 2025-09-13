@@ -52,24 +52,24 @@ const corsOptions = {
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        
+
         const allowedOrigins = process.env.NODE_ENV === "production"
             ? [
                 process.env.FRONTEND_URL,
                 "https://chatapp-frontend.vercel.app",
                 // Allow any Vercel app subdomain
                 ...origin.match(/^https:\/\/.*\.vercel\.app$/) ? [origin] : []
-              ]
+            ]
             : [
                 "http://localhost:5173",
-                "http://localhost:5174", 
+                "http://localhost:5174",
                 "http://localhost:3000",
                 "http://127.0.0.1:5173",
                 "http://127.0.0.1:5174"
-              ];
-        
+            ];
+
         // Check if the origin is in allowed origins or matches vercel pattern
-        if (allowedOrigins.includes(origin) || 
+        if (allowedOrigins.includes(origin) ||
             (process.env.NODE_ENV === "production" && /^https:\/\/.*\.vercel\.app$/.test(origin))) {
             callback(null, true);
         } else {

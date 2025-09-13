@@ -4,15 +4,15 @@ import { Users } from "lucide-react";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 
 const Sidebar = () => {
-  const { 
-    getUsers, 
-    getUsersWithOnlineStatus, 
+  const {
+    getUsers,
+    getUsersWithOnlineStatus,
     getOnlineUsersCount,
     getUnreadCount,
     unreadMessages,
-    selectedUser, 
-    setSelectedUser, 
-    isUsersLoading 
+    selectedUser,
+    setSelectedUser,
+    isUsersLoading,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
@@ -23,7 +23,7 @@ const Sidebar = () => {
 
   // Debug: Log unread messages whenever they change
   useEffect(() => {
-    console.log('📱 Sidebar: Unread messages state changed:', unreadMessages);
+    console.log("📱 Sidebar: Unread messages state changed:", unreadMessages);
   }, [unreadMessages]);
 
   // Get users with real-time online status
@@ -98,7 +98,9 @@ const Sidebar = () => {
               {/* Unread indicator for mobile */}
               {getUnreadCount(user._id) > 0 && (
                 <span className="lg:hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] z-10">
-                  {getUnreadCount(user._id) > 9 ? "9+" : getUnreadCount(user._id)}
+                  {getUnreadCount(user._id) > 9
+                    ? "9+"
+                    : getUnreadCount(user._id)}
                 </span>
               )}
             </div>
@@ -115,7 +117,9 @@ const Sidebar = () => {
             {getUnreadCount(user._id) > 0 && (
               <div className="hidden lg:block">
                 <span className="bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-                  {getUnreadCount(user._id) > 99 ? "99+" : getUnreadCount(user._id)}
+                  {getUnreadCount(user._id) > 99
+                    ? "99+"
+                    : getUnreadCount(user._id)}
                 </span>
               </div>
             )}

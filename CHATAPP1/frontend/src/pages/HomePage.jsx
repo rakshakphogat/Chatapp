@@ -22,21 +22,25 @@ const HomePage = () => {
       console.log("🏠 HomePage: User authenticated, setting up chat");
       getUsers();
       subscribeToMessages();
-      
+
       // Add debugging methods to window for testing unread counts
       window.testUnreadCount = (userId, count) => {
-        console.log(`🧪 Testing unread count: Setting ${count} for user ${userId}`);
+        console.log(
+          `🧪 Testing unread count: Setting ${count} for user ${userId}`
+        );
         const { setUnreadCountForTesting } = useChatStore.getState();
         setUnreadCountForTesting(userId, count);
       };
-      
+
       window.checkUnreadState = () => {
         const { unreadMessages } = useChatStore.getState();
-        console.log('🔍 Current unread state:', unreadMessages);
+        console.log("🔍 Current unread state:", unreadMessages);
         return unreadMessages;
       };
-      
-      console.log("🧪 Test methods added to window: testUnreadCount(userId, count) and checkUnreadState()");
+
+      console.log(
+        "🧪 Test methods added to window: testUnreadCount(userId, count) and checkUnreadState()"
+      );
     }
 
     return () => unsubscribeFromMessages();

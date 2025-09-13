@@ -5,6 +5,7 @@
 Your backend is now configured for Render with full Socket.IO support.
 
 ## 🔧 Changes Made:
+
 - ✅ Removed Vercel-specific files (vercel.json, api/ folder)
 - ✅ Updated CORS to include Render domains (.onrender.com)
 - ✅ Restored Socket.IO real-time messaging
@@ -14,6 +15,7 @@ Your backend is now configured for Render with full Socket.IO support.
 ## 🚀 Deploy Steps:
 
 ### Step 1: Push to GitHub
+
 ```bash
 git add .
 git commit -m "Prepare backend for Render deployment"
@@ -21,10 +23,12 @@ git push
 ```
 
 ### Step 2: Create Render Account
+
 1. Go to [render.com](https://render.com)
 2. Sign up with GitHub (free)
 
 ### Step 3: Deploy Backend
+
 1. **Dashboard** → **New** → **Web Service**
 2. **Connect GitHub repo**: Select your repository
 3. **Settings:**
@@ -36,6 +40,7 @@ git push
    - **Instance Type**: `Free`
 
 ### Step 4: Add Environment Variables
+
 In Render dashboard, add these environment variables:
 
 ```env
@@ -49,6 +54,7 @@ FRONTEND_URL=https://chatapp-frontend-lake.vercel.app
 ```
 
 ### Step 5: Deploy!
+
 Click **Create Web Service** and wait for deployment.
 
 ## 📋 After Deployment:
@@ -56,6 +62,7 @@ Click **Create Web Service** and wait for deployment.
 1. **Copy your Render URL** (e.g., `https://chatapp-backend-xyz.onrender.com`)
 
 2. **Update frontend .env:**
+
 ```env
 VITE_API_URL=https://your-render-app.onrender.com/api
 VITE_SOCKET_URL=https://your-render-app.onrender.com
@@ -66,16 +73,18 @@ VITE_SOCKET_URL=https://your-render-app.onrender.com
    - `https://your-render-app.onrender.com/api/auth/check`
 
 ## 🎯 Features Enabled:
+
 ✅ Socket.IO real-time messaging  
 ✅ File uploads via Cloudinary  
 ✅ JWT Authentication  
 ✅ MongoDB integration  
 ✅ CORS configured for both Vercel and Render frontends  
-✅ Persistent connections (no serverless limitations)  
+✅ Persistent connections (no serverless limitations)
 
 ## 🔥 Benefits over Vercel:
+
 - ✅ Real-time Socket.IO messaging works perfectly
-- ✅ Persistent connections 
+- ✅ Persistent connections
 - ✅ No cold starts for real-time features
 - ✅ Better for chat applications
 

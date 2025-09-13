@@ -76,8 +76,8 @@ const corsOptions = {
 
         // Check if the origin is in allowed origins or matches vercel/render pattern
         if (allowedOrigins.includes(origin) ||
-            (process.env.NODE_ENV === "production" && 
-             (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.onrender\.com$/.test(origin)))) {
+            (process.env.NODE_ENV === "production" &&
+                (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.onrender\.com$/.test(origin)))) {
             callback(null, true);
         } else {
             console.log('CORS blocked origin:', origin);

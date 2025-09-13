@@ -6,29 +6,37 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from the same directory as this file
-dotenv.config({ path: path.join(__dirname, '.env') });
+// Load environment variables. When running locally from /backend we want the root .env file (one level up)
+// In Vercel, process.cwd() will be the build output for this function, so we attempt both locations gracefully.
+const rootEnvPath = path.join(__dirname, '..', '.env');
+const localEnvPath = path.join(__dirname, '.env');
+dotenv.config({ path: rootEnvPath });
+// Fallback if not loaded
+if (!process.env.MONGODB_URI) {
+    dotenv.config({ path: localEnvPath });
+}
 
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
 // Import routes and configurations
-import { connectDB } from "./lib/db.js";
-import authRoutes from "./routes/auth.js";
-import messageRoutes from "./routes/message.js";
-// NOTE: This file is intended for a traditional long-lived server deployment (e.g. Railway/Render/Local).
-// For Vercel serverless deployment, use api/index.js instead. Socket.IO is initialized only here.
-import { app, server } from "./lib/socket.js";
-import { getCloudinary } from "./lib/cloudinary.js";
+import { connectDB } from "../lib/db.js";
+import authRoutes from "../routes/auth.js";
+import messageRoutes from "../routes/message.js";
+import { getCloudinary } from "../lib/cloudinary.js";
+
+// Create Express app for Vercel
+const app = express();
 
 // Environment variables validation
-const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "PORT"];
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET"];
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
     console.error("❌ Missing required environment variables:", missingEnvVars);
-    process.exit(1);
+    // Don't exit in Vercel, just log the error
+    console.error("This may cause authentication and database issues");
 }
 
 // Initialize Cloudinary after environment variables are loaded
@@ -36,25 +44,15 @@ try {
     getCloudinary();
 } catch (error) {
     console.error("❌ Failed to initialize Cloudinary:", error.message);
-    process.exit(1);
+    console.error("Image uploads may not work properly");
 }
-
-// Port configuration
-const PORT = process.env.PORT || 5001;
-
-// Log environment status
-console.log("🔧 Environment Configuration:");
-console.log("PORT:", PORT);
-console.log("MONGODB_URI:", process.env.MONGODB_URI ? "✅ Loaded" : "❌ Missing");
-console.log("JWT_SECRET:", process.env.JWT_SECRET ? "✅ Loaded" : "❌ Missing");
-console.log("NODE_ENV:", process.env.NODE_ENV || "development");
 
 // CORS configuration
 const corsOptions = {
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-
+        
         const allowedOrigins = process.env.NODE_ENV === "production"
             ? [
                 process.env.FRONTEND_URL,
@@ -62,17 +60,17 @@ const corsOptions = {
                 "https://chatapp-frontend.vercel.app",
                 // Allow any Vercel app subdomain
                 ...origin.match(/^https:\/\/.*\.vercel\.app$/) ? [origin] : []
-            ]
+              ]
             : [
                 "http://localhost:5173",
-                "http://localhost:5174",
+                "http://localhost:5174", 
                 "http://localhost:3000",
                 "http://127.0.0.1:5173",
                 "http://127.0.0.1:5174"
-            ];
-
+              ];
+        
         // Check if the origin is in allowed origins or matches vercel pattern
-        if (allowedOrigins.includes(origin) ||
+        if (allowedOrigins.includes(origin) || 
             (process.env.NODE_ENV === "production" && /^https:\/\/.*\.vercel\.app$/.test(origin))) {
             callback(null, true);
         } else {
@@ -100,6 +98,16 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint
+app.get("/", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "ChatApp Backend API is running",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development",
+        version: "1.0.0"
+    });
+});
+
 app.get("/health", (req, res) => {
     res.status(200).json({
         success: true,
@@ -113,21 +121,12 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Serve static files in production
-if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-    // Catch all handler for SPA
-    app.get("*", (req, res) => {
-        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
-    });
-}
-
 // 404 handler for API routes
 app.use("/api/*", (req, res) => {
     res.status(404).json({
         success: false,
-        message: "API endpoint not found"
+        message: "API endpoint not found",
+        path: req.path
     });
 });
 
@@ -142,50 +141,23 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server
-const startServer = async () => {
-    try {
-        // Connect to database first
-        await connectDB();
-
-        // Start listening
-        server.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
-            console.log(`📱 Health check: http://localhost:${PORT}/health`);
-
-            if (process.env.NODE_ENV !== "production") {
-                console.log(`🔗 Local API: http://localhost:${PORT}/api`);
-            }
-        });
-    } catch (error) {
-        console.error("❌ Failed to start server:", error);
-        process.exit(1);
-    }
-};
-
-// Handle graceful shutdown
-process.on("SIGTERM", () => {
-    console.log("🔄 SIGTERM received, shutting down gracefully...");
-    server.close(() => {
-        console.log("✅ Process terminated");
+// Connect to database (ensure single connection in serverless by caching the promise on globalThis)
+if (!globalThis.__dbPromise) {
+    globalThis.__dbPromise = connectDB().catch(err => {
+        console.error("❌ Database connection failed:", err);
     });
-});
+} else {
+    // Reuse existing promise
+    globalThis.__dbPromise.then(() => console.log("🔁 Reusing existing DB connection"));
+}
 
-process.on("SIGINT", () => {
-    console.log("🔄 SIGINT received, shutting down gracefully...");
-    server.close(() => {
-        console.log("✅ Process terminated");
+// Export for Vercel
+export default app;
+
+// Allow running this file directly with: node api/index.js (useful for local test of serverless build)
+if (process.argv[1] && process.argv[1].endsWith('api\\index.js')) {
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, () => {
+        console.log(`🚀 API (serverless style) running locally on http://localhost:${PORT}`);
     });
-});
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
-    console.error("❌ Unhandled Promise Rejection:", err);
-    server.close(() => {
-        process.exit(1);
-    });
-});
-
-// Start the server
-startServer();
+}

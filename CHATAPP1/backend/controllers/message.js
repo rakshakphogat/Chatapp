@@ -1,7 +1,6 @@
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 import cloudinary from "../lib/cloudinary.js";
-import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
     try {
@@ -90,17 +89,9 @@ export const sendMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // Emit to receiver via socket.io for real-time messaging
-        const receiverSocketIds = getReceiverSocketId(receiverId);
-        if (receiverSocketIds && receiverSocketIds.length > 0) {
-            // Send to all of the receiver's active sessions
-            receiverSocketIds.forEach(socketId => {
-                io.to(socketId).emit("newMessage", newMessage);
-            });
-            console.log("📤 Message sent to", receiverSocketIds.length, "receiver sessions");
-        } else {
-            console.log("📴 Receiver is offline");
-        }
+        // Note: Real-time messaging via Socket.IO is not available in Vercel serverless functions
+        // The frontend will need to implement polling or use alternative real-time solutions
+        console.log("� Message saved successfully:", newMessage._id);
 
         res.status(201).json({
             success: true,

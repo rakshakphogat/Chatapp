@@ -59,9 +59,12 @@ const corsOptions = {
             ? [
                 process.env.FRONTEND_URL,
                 "https://chatapp-rc3y.vercel.app",
+                "https://chatapp-frontend-lake.vercel.app",
                 "https://chatapp-frontend.vercel.app",
                 // Allow any Vercel app subdomain
-                ...origin.match(/^https:\/\/.*\.vercel\.app$/) ? [origin] : []
+                ...origin.match(/^https:\/\/.*\.vercel\.app$/) ? [origin] : [],
+                // Allow Render frontend domains
+                ...origin.match(/^https:\/\/.*\.onrender\.com$/) ? [origin] : []
             ]
             : [
                 "http://localhost:5173",
@@ -71,9 +74,10 @@ const corsOptions = {
                 "http://127.0.0.1:5174"
             ];
 
-        // Check if the origin is in allowed origins or matches vercel pattern
+        // Check if the origin is in allowed origins or matches vercel/render pattern
         if (allowedOrigins.includes(origin) ||
-            (process.env.NODE_ENV === "production" && /^https:\/\/.*\.vercel\.app$/.test(origin))) {
+            (process.env.NODE_ENV === "production" && 
+             (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.onrender\.com$/.test(origin)))) {
             callback(null, true);
         } else {
             console.log('CORS blocked origin:', origin);

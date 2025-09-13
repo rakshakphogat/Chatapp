@@ -1,6 +1,7 @@
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 import cloudinary from "../lib/cloudinary.js";
+import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
     try {
@@ -56,23 +57,6 @@ export const sendMessage = async (req, res) => {
         const { id: receiverId } = req.params;
         const senderId = req.user._id;
 
-        // Validation
-        if (!text && !image) {
-            return res.status(400).json({
-                success: false,
-                message: "Message must contain either text or image"
-            });
-        }
-
-        // Check if receiver exists
-        const receiver = await User.findById(receiverId);
-        if (!receiver) {
-            return res.status(404).json({
-                success: false,
-                message: "Receiver not found"
-            });
-        }
-
         let imageUrl;
         if (image) {
             // Upload image to cloudinary
@@ -89,9 +73,17 @@ export const sendMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // Note: Real-time messaging via Socket.IO is not available in Vercel serverless functions
-        // The frontend will need to implement polling or use alternative real-time solutions
-        console.log("� Message saved successfully:", newMessage._id);
+        // Emit to receiver via socket.io for real-time messaging
+        const receiverSocketIds = getReceiverSocketId(receiverId);
+        if (receiverSocketIds && receiverSocketIds.length > 0) {
+            // Send to all of the receiver's active sessions
+            receiverSocketIds.forEach(socketId => {
+                io.to(socketId).emit("newMessage", newMessage);
+            });
+            console.log("📤 Message sent to", receiverSocketIds.length, "receiver sessions");
+        } else {
+            console.log("📴 Receiver is offline");
+        }
 
         res.status(201).json({
             success: true,

@@ -8,7 +8,14 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: process.env.NODE_ENV === "production"
-            ? [process.env.FRONTEND_URL, "https://chatapp-frontend.vercel.app", /\.vercel\.app$/]
+            ? [
+                process.env.FRONTEND_URL, 
+                "https://chatapp-rc3y.vercel.app",
+                "https://chatapp-frontend-lake.vercel.app",
+                "https://chatapp-frontend.vercel.app", 
+                /\.vercel\.app$/,
+                /\.onrender\.com$/
+              ]
             : ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
         methods: ["GET", "POST"],
         credentials: true,

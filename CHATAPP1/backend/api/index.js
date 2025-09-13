@@ -67,22 +67,22 @@ let authRoutes, messageRoutes;
 try {
     const authModule = await import("../routes/auth.js");
     const messageModule = await import("../routes/message.js");
-    
+
     authRoutes = authModule.default;
     messageRoutes = messageModule.default;
-    
+
     app.use("/api/auth", authRoutes);
     app.use("/api/messages", messageRoutes);
-    
+
     console.log("✅ Routes loaded successfully");
 } catch (error) {
     console.error("❌ Error loading routes:", error.message);
-    
+
     // Fallback routes if imports fail
     app.get("/api/auth/check", (req, res) => {
         res.json({ success: false, message: "Auth routes not loaded" });
     });
-    
+
     app.get("/api/messages/users", (req, res) => {
         res.json({ success: false, message: "Message routes not loaded" });
     });
